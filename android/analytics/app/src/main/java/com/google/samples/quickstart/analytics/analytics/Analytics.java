@@ -1,28 +1,27 @@
 package com.google.samples.quickstart.analytics.analytics;
 
-import com.google.android.gms.analytics.GoogleAnalytics;
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
-import com.google.samples.quickstart.analytics.R;
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 import android.content.Context;
+import android.os.Bundle;
 
 public class Analytics {
 
     private static final String TAG = Analytics.class.getSimpleName();
 
     private static Analytics instance;
-    private Tracker tracker;
+
+    private FirebaseAnalytics tracker;
 
     public synchronized static boolean init(Context context) {
-        if(instance == null){
+        if (instance == null) {
             instance = new Analytics(context);
             return true;
         }
         return false;
     }
 
-    public static Analytics getInstance(){
+    public static Analytics getInstance() {
         return instance;
     }
 
@@ -36,25 +35,33 @@ public class Analytics {
      *
      * @return tracker
      */
-    private Tracker initTracker(Context context) {
+    private FirebaseAnalytics initTracker(Context context) {
         if (tracker == null) {
-            GoogleAnalytics analytics = GoogleAnalytics.getInstance(context.getApplicationContext());
-            tracker = analytics.newTracker(R.xml.global_tracker);
+            tracker = FirebaseAnalytics.getInstance(context.getApplicationContext());
         }
         return tracker;
     }
 
     public void reportAction(String category, String action) {
-        if (tracker == null) throw new RuntimeException("Call init(Context context) before.");
-        tracker.send(new HitBuilders.EventBuilder()
-                .setCategory(category)
-                .setAction(action)
-                .build());
+        if (tracker == null) {
+            throw new RuntimeException("Call init(Context context) before.");
+        }
+
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, category);
+        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, action);
+
+        tracker.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
     }
 
     public void reportScreenView(String screenName) {
-        if (tracker == null) throw new RuntimeException("Call init(Context context) before.");
-        tracker.setScreenName(screenName);
-        tracker.send(new HitBuilders.ScreenViewBuilder().build());
+        if (tracker == null) {
+            throw new RuntimeException("Call init(Context context) before.");
+        }
+
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, screenName);
+
+        tracker.logEvent(FirebaseAnalytics.Event.VIEW_ITEM, bundle);
     }
 }
